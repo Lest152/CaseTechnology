@@ -3,51 +3,54 @@
 #include <vector>
 #include <windows.h>
 #include <gl\glut.h>	//Подключение библиотеки glut.h (openGL)
+#include <utility>
+
+#define PI_1   0.01745f
+#define PI_180 3.14159f
+#define PI_360 6.28318f
 
 using namespace std;
 
 static const float epsilon = 1e-4f; //задание точности
 static const float PI = 3.14159265;
-float xc0, yc0, r;	//центр окружности + радиус
 
-struct Coord
+int dim; // размерность пространства
+vector<float> center; //координаты центра окружности
+float radius; //радиус
+
+vector<vector<float>> points = {};
+
+inline float operator*(vector<float> p0, vector<float> p1)
 {
-	float x;
-	float y;
-};
-
-vector<Coord> points = {};
-
-
-
-inline float operator*(Coord p0, Coord p1)
-{
-	return p0.x*p1.x + p0.y*p1.y;
+	float result = 0;
+	for (int i = 0; i < p0.size(); i++)
+		result += p0[i] * p1[i];
+	return result;
 }
 
-inline Coord operator*(Coord p0, float t)
+inline vector<float> operator*(vector<float> p0, float t)
 {
-	p0.x *= t;
-	p0.y *= t;
+	for (int i = 0; i < p0.size(); i++)
+		p0[i] *= t;
 	return p0;
 }
 
-inline Coord operator-(Coord p0, Coord p1)
+inline vector<float> operator-(vector<float> p0, vector<float> p1)
 {
-	p0.x -= p1.x;
-	p0.y -= p1.y;
+	for (int i = 0; i < p0.size(); i++)
+		p0[i] -= p1[i];
 	return p0;
 }
 
-vector<Coord> findInterPoint(Coord start_point, Coord direction, Coord center, float radius)
+vector<vector<float>> findInterPointNEW(vector<float> start_point, vector<float> direction, vector<float> center, float radius)
 {
-	Coord delta = center - start_point;
+	vector<float> delta = center - start_point;
 
 	float a = direction*direction;
 	float half_b = direction*delta*(-1.0f);
 	float c = delta*delta - radius*radius;
 
-	vector<Coord> result;
+	vector<vector<float>> result;
 	float discr = half_b*half_b - a*c;
 
 	if (discr < -epsilon)
@@ -71,30 +74,27 @@ vector<Coord> findInterPoint(Coord start_point, Coord direction, Coord center, f
 	}
 }
 
-double double_rand(double r_max)
+
+//Функция умножения матриц
+float ** multiplyMatrices(int n, int m, float** a, int z, int w, float** b)
 {
-	if (r_max != 0)
+	if (m == z)
 	{
-		int rand_max = r_max * 100;
-		int r = rand() % rand_max;
-		double t = (double)r / 100;
+		float** result = new float*[n];
 
-		return t;
+		for (int i = 0; i < n; i++)
+		{
+			result[i] = new float[w];
+			for (int j = 0; j < w; j++)
+			{
+				result[i][j] = 0;
+				for (int k = 0; k < m; k++)
+					result[i][j] += a[i][k] * b[k][j];
+			}
+		}
+		return result;
 	}
-	else
-		return 0;
-}
-
-double ran_sign(double k, double dk)
-{
-	int sign = rand() % 2;
-
-	if (sign == 0)
-		k = k + dk;
-	else
-		k = k - dk;
-
-	return k;
+	return NULL;
 }
 
 //OPENGL 
@@ -139,12 +139,12 @@ void Draw()
 	glBegin(GL_POINTS);
 	glColor3d(0, 0, 1);
 	for (int i = 0; i < points.size(); i++)
-		glVertex2f(points[i].x, points[i].y);
+		glVertex2f(points[i][0], points[i][1]);
 
 	glEnd();
 	//---------------------------------------
 
-	drawCircle(xc0, yc0, r);
+	drawCircle(center[0], center[1], radius);
 
 	glFlush();
 }
@@ -152,66 +152,157 @@ void Draw()
 int main(int argc, char **argv) {
 	setlocale(LC_ALL, "russian");
 
-	float x0, y0, x1, y1;	//координаты стартовой прямой
-	
-	int alfa;			//угол альфа
+	do
+	{
+		cout << "Введите желаемую размерность пространства: ";
+		cin >> dim;
+	} while (dim < 2);
 
-	cout << "Введите координаты прямой (диапазон оси координат [-25;25]): ";
-	cin >> x0 >> y0 >> x1 >> y1;
+
+	cout << "Введите координаты прямой: ";
+	vector<float> point0, point1; //координаты точек стартовой прямой
+								  
+	for (int i = 0; i < 2 * dim; i++)
+	{
+		float v;
+		cin >> v;
+		if (i < dim)
+			point0.push_back(v);
+		else
+			point1.push_back(v);
+	}
 
 	cout << "Введите координаты центра окружности: ";
-	cin >> xc0 >> yc0;
+	for (int i = 0; i < dim; i++)
+	{
+		float v;
+		cin >> v;
+		center.push_back(v);
+	}
 
 	cout << "Введите радиус окружности: ";
-	cin >> r;
-
-	const Coord start_point{ x0, y0 };	//Задаем начальную точку луча
-
-	const Coord center{ xc0, yc0 };
-	const float radius = r;
+	cin >> radius;
 
 	cout << "Введите градус угла рассеивания лучей: ";
+	int alfa;
 	cin >> alfa;
 
-	//вычисление максимальных приращений dx и dy в заданном секторе
-	double dx, dy;
+	float **rotationMatrixLeft, **rotationMatrixRight; //Матрица поворота
+	float **RotationLeft, **RotationRight;
 
-	double s = sqrt(pow((x1 - x0), 2) + pow((y1 - y0), 2));
-	double beta = atan(fabs(y1 - y0) / (fabs(x1 - x0)));
-	double p = s*tan(alfa / 2 * PI / 180);
+	rotationMatrixLeft = new float *[dim];
+	for (int i = 0; i < dim; i++)
+		rotationMatrixLeft[i] = new float[dim];
 
-	dx = p * sin(beta);
+	rotationMatrixRight = new float *[dim];
+	for (int i = 0; i < dim; i++)
+		rotationMatrixRight[i] = new float[dim];
 
-	if (beta * 180 / PI != 90)
-		dy = p * cos(beta);
-	else
-		dy = 0;
+	RotationLeft = new float *[dim];
+	for (int i = 0; i < dim; i++)
+		RotationLeft[i] = new float[dim];
 
-	int count;
-	cout << "Введите количество желаемых лучей из начальной точки в заданном секторе: ";
-	cin >> count;
+	RotationRight = new float *[dim];
+	for (int i = 0; i < dim; i++)
+		RotationRight[i] = new float[dim];
 
-	cout << endl;
+	//Инициализация единичной матрицы
+	for(int i = 0; i < dim; i++)
+		for (int j = 0; j < dim; j++)
+		{
+			if (i != j)
+				rotationMatrixLeft[i][j] = rotationMatrixRight[i][j] = 0;
+			else
+				rotationMatrixLeft[i][j] = rotationMatrixRight[i][j] = 1;
+		}
 
-	vector<Coord> linesDirection;
+	vector<pair<int, int>> unic_pair;
+	
+	float **VectorPointRight = new float*[dim];
+	for (int i = 0; i < dim; i++)
+		VectorPointRight[i] = new float;
 
-	Coord start_direction{ x1 - x0, y1 - y0 };
-	linesDirection.push_back(start_direction);
+	float **VectorPointLeft = new float*[dim];
+	for (int i = 0; i < dim; i++)
+		VectorPointLeft[i] = new float;
 
-	for (int i = 0; i < count; i++)
+	for (int ind = 0; ind < dim; ind++)
+		VectorPointRight[ind][0] = point1[ind];
+
+	for (int ind = 0; ind < dim; ind++)
+		VectorPointLeft[ind][0] = point1[ind];
+
+	vector<vector<float>> linesDirection;
+	linesDirection.push_back(point1 - point0); //задание центрального луча	
+
+	//Расчет матрицы поворота
+	for (int k = 1; k <= alfa/2; k++)
 	{
-		double x2 = ran_sign(x1, double_rand(dx));
-		double y2 = ran_sign(y1, double_rand(dy));
-		Coord direction{ (float)x2 - x0, (float)y2 - y0 };
+		for (int i = 0; i < dim; i++)
+			for (int j = 0; j < dim; j++)
+			{
 
-		linesDirection.push_back(direction);
+				for (int k = 0; k < dim; k++)
+					for (int c = 0; c < dim; c++)
+					{
+						if (k != c)
+							RotationLeft[k][c] = RotationRight[k][c] = 0;
+						else
+							RotationLeft[k][c] = RotationRight[k][c] = 1;
+					}
+				bool contains = false;
+				if (i != j)
+				{
+					for (int k = 0; k < unic_pair.size(); k++)
+					{
+						if (unic_pair[k].first == i && unic_pair[k].second == j)
+						{
+							contains = true;
+							break;
+						}
+					}
+
+					if (!contains)
+					{
+						RotationLeft[i][i] = cos(k * PI / 180);
+						RotationLeft[i][j] = -sin(k * PI / 180);
+						RotationLeft[j][i] = sin(k * PI / 180);
+						RotationLeft[j][j] = cos(k * PI / 180);
+
+						RotationRight[i][i] = cos(k * PI / 180);
+						RotationRight[i][j] = sin(k * PI / 180);
+						RotationRight[j][i] = -sin(k * PI / 180);
+						RotationRight[j][j] = cos(k * PI / 180);
+
+						rotationMatrixLeft = multiplyMatrices(dim, dim, rotationMatrixLeft, dim, dim, RotationLeft);
+						rotationMatrixRight = multiplyMatrices(dim, dim, rotationMatrixRight, dim, dim, RotationRight);
+
+						unic_pair.push_back(make_pair(i, j));
+						unic_pair.push_back(make_pair(j, i));
+					}
+				}
+			}
+		
+		// Умножение вектора на матрицу поворота
+		VectorPointLeft = multiplyMatrices(dim, dim, rotationMatrixLeft, dim, 1, VectorPointLeft);
+		VectorPointRight = multiplyMatrices(dim, dim, rotationMatrixRight, dim, 1, VectorPointRight);
+		
+		vector<float> point_1, point_2;
+		for (int ind = 0; ind < dim; ind++)
+		{
+			point_1.push_back(VectorPointLeft[ind][0]);
+			point_2.push_back(VectorPointRight[ind][0]);
+		}
+		
+		linesDirection.push_back(point_1 - point0);
+		linesDirection.push_back(point_2 - point0);		
 	}
 
 	cout << "Результаты пересечения:" << endl;
 
 	for (int i = 0; i < linesDirection.size(); i++)
 	{
-		vector<Coord> result = findInterPoint(start_point, linesDirection[i], center, radius);
+		vector<vector<float>> result = findInterPointNEW(point0, linesDirection[i], center, radius);
 
 		switch (result.size())
 		{
@@ -226,8 +317,15 @@ int main(int argc, char **argv) {
 
 		for (int i = 0; i < result.size(); i++)
 		{
-			cout << "   >>> Точка пересечения с координатами: (" << result[i].x << ", " << result[i].y << ")" << endl;
-			points.push_back(result[i]);
+			vector<float> point;
+			cout << "   >>> Точка пересечения с координатами: (";
+			for (int j = 0; j < result[i].size(); j++)
+			{
+				cout << result[i][j] << " ";
+				point.push_back(result[i][j]);
+			}
+			cout << ")" << endl;
+			points.push_back(point);
 		}
 	}
 
@@ -241,8 +339,16 @@ int main(int argc, char **argv) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(-25, 25, -25, 25);
-	glutDisplayFunc(Draw);				//Вызов функции отрисовки
+
+	glutDisplayFunc(Draw);			//Вызов функции отрисовки
+
 	glutMainLoop();
+
+	//Освобождение памяти матрицы поворота
+	for (int i = 0; i < dim; i++)
+		delete[]rotationMatrixLeft[i];
+
+	delete[]rotationMatrixLeft;
 
 	system("pause");
 	return 0;
