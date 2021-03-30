@@ -1,20 +1,26 @@
-#include <vector>
+//#include "ICamera.h"
 
-class Camera()
+
+class Camera
 {
+
 	public:
-	virtual void setView() = 0;					//РњРµС‚РѕРґ СѓСЃС‚Р°РЅРѕРІРєРё С‚РѕС‡РєРё РѕР±Р·РѕСЂР° Рё РЅР°РїСЂР°РІР»РµРЅРёСЏ РєР°РјРµСЂС‹
-	virtual vector<float> getView() = 0;		//РџРѕР»СѓС‡РёС‚СЊ С‚РѕС‡РєСѓ РѕР±Р·РѕСЂР° Рё РЅР°РїСЂР°РІР»РµРЅРёСЏ РєР°РјРµСЂС‹
-	
-	virtual void setFOV_H() = 0;				//РЈСЃС‚Р°РЅРѕРІРєР° РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕРіРѕ СѓРіР»Р°
-	virtual vector<float> getFOV_H() = 0;		//Р’С‹РІРѕРґ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕРіРѕ СѓРіР»Р°
-	
-	virtual void setFOV_V() = 0;				//РЈСЃС‚Р°РЅРѕРІРєР° РІРµСЂС‚РёРєР°Р»СЊРЅРѕРіРѕ СѓРіР»Р°
-	virtual vector<float> getFOV_V() = 0;		//Р’С‹РІРѕРґ РІРµСЂС‚РёРєР°Р»СЊРЅРѕРіРѕ СѓРіР»Р°
-	
+	Camera(vector<float> p, vector<float> d, float angle_h, float angle_v);
+	void setView(vector<float>);					//Метод установки точки обзора и направления камеры
+	vector<float> getView();		//Получить точку обзора и направления камеры
+	void setFOV_H(float);				//Установка горизонтального угла
+	float getFOV_H();		//Вывод горизонтального угла
+
+	void setFOV_V(float);				//Установка вертикального угла
+	float getFOV_V();		//Вывод вертикального угла
+
+	void setDirection(vector<float>);
+	vector<float> getDirection();
+
+
 	private:
-	vector<float> viewPointer;		//РўРѕС‡РєР° РѕР±Р·РѕСЂР°
-	vector<float> fov_h;			//СѓРіРѕР» РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕРіРѕ РѕР±Р·РѕСЂР°
-	vector<float> fov_v;			//СѓРіРѕР» РІРµСЂС‚РёРєР°Р»СЊРЅРѕРіРѕ РѕР±Р·РѕСЂР°
-	vector<float> direction;		//РќР°РїСЂР°РІР»РµРЅРёРµ РѕР±Р·РѕСЂР° РєР°РјРµСЂС‹
+	vector<float> viewPointer;		//Точка обзора
+	float fov_h;			//угол горизонтального обзора
+	float fov_v;			//угол вертикального обзора
+	vector<float> direction;		//Направление обзора камеры
 };
