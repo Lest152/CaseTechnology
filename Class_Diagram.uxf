@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>130</x>
+      <y>430</y>
+      <w>500</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Sphere&gt;&gt;
+Package::Sphere
+--
+-radius: float
+--
++interPoints(viewer: vector&lt;float&gt;, direction: vector&lt;float&gt;): vector&lt;float&gt;
+
+--
+Responsibilities
+-- Находить координаты пересечения луча из точки обзора в заданном
+направлении с поверхностью самой фигуры</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>250</x>
+      <y>290</y>
+      <w>210</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>/Figure/
+--
+-startPoint: vector&lt;float&gt;
+-R, G, B: int
+--
++interPoints()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>340</x>
+      <y>370</y>
+      <w>30</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>890</x>
+      <y>430</y>
+      <w>500</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Camera&gt;&gt;
+Package::Camera
+--
+-viewPointer: vector&lt;float&gt;
+-direction: vector&lt;float&gt;
+-for_v: float
+-fov_h: float
+--
++setView(newViewPointer: vector&lt;float&gt;)
++setDirection(newDirection: vector&lt;float&gt;)
+--
+Responsibilities
+--Контейнер со свойствами камеры</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>490</x>
+      <y>680</y>
+      <w>500</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Light&gt;&gt;
+Package::Light
+--
+-point: vector&lt;float&gt;
+-direction: vector&lt;float&gt;
+-intence: int
+-type: enum={"diffuse", "direct", "point"}
+--
++intenceInPoint(point: vector&lt;float&gt;): int
+--
+Responsibilities
+--Контейнер со свойствами камеры</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>480</x>
+      <y>20</y>
+      <w>500</w>
+      <h>210</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Scene&gt;&gt;
+Package::Scene
+--
+-figures: vector&lt;Figure&gt;
+-camera: Camera
+-light: vector&lt;Light&gt;
+-background: vector&lt;int&gt;
+--
++render(x: int, y:int): pixels[x][y]
++draw(pixels[x][y])
++saveBmp(pixels[x][y])
+--
+Responsibilities
+--расчет сцены с объектами и источниками освещения, отображение
+или сохранение в файл</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>350</x>
+      <y>220</y>
+      <w>200</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+m1=0..n</panel_attributes>
+    <additional_attributes>180.0;10.0;10.0;70.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>720</x>
+      <y>220</y>
+      <w>50</w>
+      <h>480</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-
+m1=0..n</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;460.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>900</x>
+      <y>220</y>
+      <w>260</w>
+      <h>230</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;240.0;210.0</additional_attributes>
+  </element>
+</diagram>

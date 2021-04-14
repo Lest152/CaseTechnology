@@ -2,7 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <windows.h>
-#include <gl\glut.h>	//Подключение библиотеки glut.h (openGL)
+//#include <gl\glut.h>	//Подключение библиотеки glut.h (openGL)
 #include <utility>
 
 #define PI_1   0.01745f
@@ -99,7 +99,7 @@ float ** multiplyMatrices(int n, int m, float** a, int z, int w, float** b)
 
 //OPENGL 
 
-
+/*
 //функция отрисовки круга
 void drawCircle(float x, float y, float r)
 {
